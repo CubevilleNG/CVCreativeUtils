@@ -1,0 +1,41 @@
+main: org.cubeville.cvcreativeutils.CVCreativeUtils
+name: CVCreativeUtils
+version: 1.20
+api-version: '1.20'
+description: 'CVCreativeUtils Plugin'
+author: ToeMan_
+depend: [WorldGuard,WorldEdit,CVTools]
+softdepend: [Multiverse-Core]
+commands:
+  cvcreativeutilsreload:
+    description: reload
+    permission: cvcreativeutils.reload
+
+  mobcount:
+    description: count
+    permission: cvcreativeutils.mobcount
+
+  mobtp:
+    description: tp to mob
+    permission: cvcreativeutils.mobtp
+
+  mobkill:
+    description: kill mob
+    permission: cvcreativeutils.mobkill
+
+permissions:
+  cvcreativeutils.reload:
+    description: access to reload command
+    default: op
+
+  cvcreativeutils.mobcount:
+    description: access to mobcount command
+    default: op
+
+  cvcreativeutils.mobtp:
+    description: access to mobtp command
+    default: op
+
+  cvcreativeutils.mobkill:
+    description: access to mobkill command
+    default: op

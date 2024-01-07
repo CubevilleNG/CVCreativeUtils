@@ -1,0 +1,7 @@
+entities-per-plot: 50
+controlled-worlds:
+  - EXAMPLEWORLD
+
+banned-entities:
+  - ENDER_DRAGON
+  - WITHER
