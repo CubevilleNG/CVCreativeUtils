@@ -1,6 +1,6 @@
-entities-per-plot: 50
+entities-per-plot: 100
 controlled-worlds:
-  - EXAMPLEWORLD
+  - creative
 
 banned-entities:
   - ENDER_DRAGON
