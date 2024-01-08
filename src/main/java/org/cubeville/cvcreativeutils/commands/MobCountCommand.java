@@ -130,6 +130,7 @@ public class MobCountCommand extends Command {
                         .append(Component.text(ChatColor.YELLOW + String.valueOf(loc.getBlockX()) + ChatColor.WHITE + ", "))
                         .append(Component.text(ChatColor.YELLOW + String.valueOf(loc.getBlockY()) + ChatColor.WHITE + ", "))
                         .append(Component.text(ChatColor.YELLOW + String.valueOf(loc.getBlockZ())))
+                        .append(Component.text(ChatColor.WHITE + " [" + ChatColor.YELLOW + "TP" + ChatColor.WHITE + "]"))
                         .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.text("Teleport to " + entity.getName())))
                         .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/mobtp " + index))
                         .build();

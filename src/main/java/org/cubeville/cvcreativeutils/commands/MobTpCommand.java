@@ -36,7 +36,7 @@ public class MobTpCommand extends Command {
             Entity entity = Bukkit.getEntity(eList.get((int)baseParameters.get(0)));
             if(entity == null) return new CommandResponse(ChatColor.RED + "Entity is unloaded or dead! This shouldn't happen!");
             player.teleport(entity.getLocation());
-            return new CommandResponse(ChatColor.GREEN + "Teleport to " + entity.getName());
+            return new CommandResponse(ChatColor.GREEN + "Teleported to " + entity.getName());
         }
     }
 
