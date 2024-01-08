@@ -34,7 +34,7 @@ public class MobCountCommand extends Command {
     public CommandResponse execute(Player player, Set<String> flags, Map<String, Object> parameters, List<Object> baseParameters) {
         boolean detailed;
         LinkedHashSet<TextComponent> out = null;
-        ProtectedRegion region = getRegion(player);
+        ProtectedRegion region = Util.getRegion(player, plotManager.getRegionsAtLoc(player.getLocation()));
         if(region == null) return new CommandResponse(ChatColor.RED + "You must be standing in your plot to run this command!");
         plotManager.verifyEntities(region, player.getWorld());
         if(baseParameters.isEmpty()) {
@@ -58,14 +58,6 @@ public class MobCountCommand extends Command {
             player.sendMessage(t);
         }
         return new CommandResponse("");
-    }
-
-    public ProtectedRegion getRegion(Player player) {
-        List<ProtectedRegion> standingInRegions = plotManager.getRegionsAtLoc(player.getLocation());
-        for(ProtectedRegion region : standingInRegions) {
-            if(region.getOwners().contains(player.getUniqueId()) || player.hasPermission("cvcreativeutils.mobcommandsoverride")) return region;
-        }
-        return null;
     }
 
     public LinkedHashSet<TextComponent> getFormattedEntityList(ProtectedRegion region, World world, boolean detailed, EntityType type) {

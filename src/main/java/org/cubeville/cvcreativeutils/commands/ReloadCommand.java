@@ -5,7 +5,7 @@ import org.bukkit.entity.EntityType;
 import org.cubeville.commons.commands.BaseCommand;
 import org.cubeville.commons.commands.CommandResponse;
 import org.cubeville.cvcreativeutils.CVCreativeUtils;
-import org.cubeville.cvcreativeutils.EntityHandler;
+import org.cubeville.cvcreativeutils.handlers.EntityHandler;
 import org.cubeville.cvcreativeutils.PlotManager;
 
 import java.util.ArrayList;

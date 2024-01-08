@@ -10,10 +10,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.cubeville.commons.commands.CommandParser;
-import org.cubeville.cvcreativeutils.commands.MobCountCommand;
-import org.cubeville.cvcreativeutils.commands.MobKillCommand;
-import org.cubeville.cvcreativeutils.commands.MobTpCommand;
-import org.cubeville.cvcreativeutils.commands.ReloadCommand;
+import org.cubeville.cvcreativeutils.commands.*;
+import org.cubeville.cvcreativeutils.handlers.BlockHandler;
+import org.cubeville.cvcreativeutils.handlers.EntityHandler;
+import org.cubeville.cvcreativeutils.handlers.ItemHandler;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -46,6 +46,8 @@ public class CVCreativeUtils extends JavaPlugin {
         PlotManager plotManager = new PlotManager(entitiesPerPlot, controlledWorlds);
         EntityHandler entityHandler = new EntityHandler(this, plotManager, bannedEntities);
         Bukkit.getPluginManager().registerEvents(entityHandler, this);
+        Bukkit.getPluginManager().registerEvents(new BlockHandler(plotManager), this);
+        Bukkit.getPluginManager().registerEvents(new ItemHandler(), this);
         this.reloadParser = new CommandParser();
         this.reloadParser.addCommand(new ReloadCommand(this, plotManager, entityHandler));
         this.mobcountParser = new CommandParser();

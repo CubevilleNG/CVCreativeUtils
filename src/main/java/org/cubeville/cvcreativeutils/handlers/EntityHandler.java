@@ -1,4 +1,4 @@
-package org.cubeville.cvcreativeutils;
+package org.cubeville.cvcreativeutils.handlers;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import io.papermc.paper.event.entity.EntityMoveEvent;
@@ -8,7 +8,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -16,6 +15,8 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.util.Vector;
+import org.cubeville.cvcreativeutils.CVCreativeUtils;
+import org.cubeville.cvcreativeutils.PlotManager;
 import org.spigotmc.event.entity.EntityDismountEvent;
 import org.spigotmc.event.entity.EntityMountEvent;
 
@@ -358,16 +359,6 @@ public class EntityHandler implements Listener {
     public void onInteractDragonEgg(PlayerInteractEvent event) {
         if(!plotManager.isWorldControlled(event.getPlayer().getWorld())) return;
         if(event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && event.getClickedBlock() != null && event.getClickedBlock().getType().equals(Material.DRAGON_EGG)) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onLiquidFlow(BlockFromToEvent event) {
-        if(event.isCancelled()) return;
-        Location fromLoc = event.getBlock().getLocation();
-        Location toLoc = event.getToBlock().getLocation();
-        if(!plotManager.getRegionsAtLoc(fromLoc).equals(plotManager.getRegionsAtLoc(toLoc))) {
             event.setCancelled(true);
         }
     }

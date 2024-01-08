@@ -11,6 +11,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.util.Vector;
+import org.cubeville.cvcreativeutils.handlers.EntityHandler;
 
 import java.util.*;
 

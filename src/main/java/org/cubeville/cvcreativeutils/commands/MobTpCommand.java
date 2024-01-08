@@ -25,7 +25,7 @@ public class MobTpCommand extends Command {
 
     @Override
     public CommandResponse execute(Player player, Set<String> flags, Map<String, Object> parameters, List<Object> baseParameters) {
-        ProtectedRegion region = getRegion(player);
+        ProtectedRegion region = Util.getRegion(player, plotManager.getRegionsAtLoc(player.getLocation()));
         if(region == null) return new CommandResponse(ChatColor.RED + "You must be standing in your plot to run this command!");
         plotManager.verifyEntities(region, player.getWorld());
         if(baseParameters.size() != 1) {
@@ -38,13 +38,5 @@ public class MobTpCommand extends Command {
             player.teleport(entity.getLocation());
             return new CommandResponse(ChatColor.GREEN + "Teleported to " + entity.getName());
         }
-    }
-
-    public ProtectedRegion getRegion(Player player) {
-        List<ProtectedRegion> standingInRegions = plotManager.getRegionsAtLoc(player.getLocation());
-        for(ProtectedRegion region : standingInRegions) {
-            if(region.getOwners().contains(player.getUniqueId()) || player.hasPermission("cvcreativeutils.mobcommandsoverride")) return region;
-        }
-        return null;
     }
 }

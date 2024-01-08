@@ -32,7 +32,7 @@ public class MobKillCommand extends Command {
     @Override
     public CommandResponse execute(Player player, Set<String> flags, Map<String, Object> parameters, List<Object> baseParameters) {
         if(baseParameters.size() != 1) return new CommandResponse(ChatColor.RED + "Invalid usage! Use /mobkill [all or entityType] - Example: /mobkill chicken");
-        ProtectedRegion region = getRegion(player);
+        ProtectedRegion region = Util.getRegion(player, plotManager.getRegionsAtLoc(player.getLocation()));
         if(region == null) return new CommandResponse(ChatColor.RED + "You must be standing in your plot to run this command!");
         plotManager.verifyEntities(region, player.getWorld());
 
@@ -53,14 +53,6 @@ public class MobKillCommand extends Command {
                 .hoverEvent(HoverEvent.hoverEvent(HoverEvent.Action.SHOW_TEXT, Component.text("Show detailed view of entities")))
                 .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/mobcount detailed")));
         return new CommandResponse("");
-    }
-
-    public ProtectedRegion getRegion(Player player) {
-        List<ProtectedRegion> standingInRegions = plotManager.getRegionsAtLoc(player.getLocation());
-        for(ProtectedRegion region : standingInRegions) {
-            if(region.getOwners().contains(player.getUniqueId()) || player.hasPermission("cvcreativeutils.mobcommandsoverride")) return region;
-        }
-        return null;
     }
 
     public int killEntities(ProtectedRegion region, World world, EntityType type, boolean killAll) {
