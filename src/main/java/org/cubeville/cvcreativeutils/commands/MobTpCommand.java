@@ -43,7 +43,7 @@ public class MobTpCommand extends Command {
     public ProtectedRegion getRegion(Player player) {
         List<ProtectedRegion> standingInRegions = plotManager.getRegionsAtLoc(player.getLocation());
         for(ProtectedRegion region : standingInRegions) {
-            if(region.getOwners().contains(player.getUniqueId())) return region;
+            if(region.getOwners().contains(player.getUniqueId()) || player.hasPermission("cvcreativeutils.mobcommandsoverride")) return region;
         }
         return null;
     }

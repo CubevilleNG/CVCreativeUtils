@@ -95,7 +95,7 @@ public class EntityHandler implements Listener {
     public void onEntityDismount(EntityDismountEvent event) {
         if(event.isCancelled()) return;
         if(this.plotManager.isEntityUnknown(event.getDismounted().getUniqueId(), event.getDismounted().getWorld())) return;
-        if(entityOutsideOfRegion(event.getDismounted())) {
+        if(beingRidden.containsKey(event.getDismounted()) && entityOutsideOfRegion(event.getDismounted())) {
             teleportEntityBackAfterRiding(event.getDismounted());
             return;
         }
@@ -118,7 +118,8 @@ public class EntityHandler implements Listener {
     private boolean entityOutsideOfRegion(Entity entity) {
         boolean outside = true;
         for(ProtectedRegion currentRegion : this.plotManager.getRegionsAtLoc(entity.getLocation())) {
-            if(this.plotManager.getRegionForEntity(entity.getUniqueId(), entity.getWorld()).equals(currentRegion)) {
+            if(this.plotManager.getRegionForEntity(entity.getUniqueId(), entity.getWorld()) != null &&
+                    this.plotManager.getRegionForEntity(entity.getUniqueId(), entity.getWorld()).equals(currentRegion)) {
                 outside = false;
                 break;
             }
@@ -177,6 +178,7 @@ public class EntityHandler implements Listener {
         if(event.isCancelled()) return;
         if(!(event.getEntity() instanceof Mob)) return;
         if(!plotManager.isWorldControlled(event.getFrom().getWorld())) return;
+        if(beingRidden.containsKey(event.getEntity())) return;
         Location fromLoc = event.getFrom();
         Location toLoc = event.getTo();
         List<ProtectedRegion> fromRegions = this.plotManager.getRegionsAtLoc(fromLoc);
