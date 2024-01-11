@@ -1,7 +1,6 @@
 package org.cubeville.cvcreativeutils.handlers;
 
 import net.kyori.adventure.text.Component;
-import net.md_5.bungee.api.chat.BaseComponent;
 import net.minecraft.nbt.NBTTagCompound;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
