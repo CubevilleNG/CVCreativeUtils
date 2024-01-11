@@ -1,7 +1,6 @@
 package org.cubeville.cvcreativeutils.handlers;
 
 import net.minecraft.nbt.NBTTagCompound;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -15,7 +14,9 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.inventory.meta.SpawnEggMeta;
 import org.bukkit.potion.PotionEffect;
 
@@ -29,15 +30,8 @@ public class ItemHandler implements Listener {
     public void onInventoryCreative(InventoryClickEvent event) {
         if(event.getClickedInventory() != null) checkEntireInventory(event.getClickedInventory());
         checkEntireInventory(event.getInventory());
-        /*if(event.isCancelled()) return;
-        ItemStack itemStack = event.getCursor();
-        int byteCount = getByteCount(itemStack);
-        if(byteCount == 0) return;
-        if(byteCount > 100000 || isItemNBTBanned(itemStack)) {
-            event.setCancelled(true);
-            if(event.getClickedInventory() != null) event.getClickedInventory().setItem(event.getSlot(), createNewStack(itemStack));
-            event.getWhoClicked().sendMessage(ChatColor.RED + String.valueOf(itemStack.getType()) + " had a NBT value above what is allowed! NBT Cleared!");
-        }*/
+        ItemStack cursorStack = event.getCursor();
+        if(cursorStack != null && isItemBanned(cursorStack)) event.setCursor(createNewStack(cursorStack));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -59,13 +53,18 @@ public class ItemHandler implements Listener {
         int i = 0;
         for(ItemStack itemStack : inventory.getContents()) {
             if(itemStack != null && !itemStack.getType().equals(Material.AIR)) {
-                if(getByteCount(itemStack) > 100000|| isItemNBTBanned(itemStack)) {
+                if(isItemBanned(itemStack)) {
                     inventory.setItem(i, createNewStack(itemStack));
                 }
             }
             i++;
         }
     }
+
+    private boolean isItemBanned(ItemStack itemStack) {
+        return getByteCount(itemStack) > 100000 || isItemNBTBanned(itemStack);
+    }
+
     private int getByteCount(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(itemStack);
         NBTTagCompound nbtTagCompound = nmsItem.v();
@@ -83,29 +82,34 @@ public class ItemHandler implements Listener {
     }
 
     private boolean isItemNBTBanned(ItemStack itemStack) {
-        boolean banned = false;
         boolean hasItemMeta = itemStack.hasItemMeta();
         if(hasItemMeta && itemStack.getItemMeta().hasAttributeModifiers()) {
             for(Attribute attribute : itemStack.getItemMeta().getAttributeModifiers().keySet()) {
                 List<AttributeModifier> list = new ArrayList<>(itemStack.getItemMeta().getAttributeModifiers().get(attribute));
                 for(AttributeModifier modifier : list) {
                     if(modifier.getAmount() > 10) {
-                        banned = true;
-                        break;
+                        return true;
                     }
                 }
             }
         }
         if(itemStack instanceof Sign || (hasItemMeta && itemStack.getItemMeta() instanceof SpawnEggMeta)) {
-            banned = true;
+            return true;
         } else if(hasItemMeta && itemStack.getItemMeta() instanceof PotionMeta) {
             for(PotionEffect effect : ((PotionMeta)itemStack.getItemMeta()).getCustomEffects()) {
                 if(effect.getAmplifier() > 10) {
-                    banned = true;
-                    break;
+                    return true;
+                }
+            }
+        } else if(hasItemMeta && itemStack.getItemMeta() instanceof SkullMeta) {
+            return ((SkullMeta) itemStack.getItemMeta()).getNoteBlockSound() != null;
+        } else if(hasItemMeta && itemStack.getItemMeta() instanceof BundleMeta) {
+            if(((BundleMeta)itemStack.getItemMeta()).hasItems()) {
+                for(ItemStack stack : ((BundleMeta)itemStack.getItemMeta()).getItems()) {
+                    if(isItemBanned(stack)) return true;
                 }
             }
         }
-        return banned;
+        return false;
     }
 }
