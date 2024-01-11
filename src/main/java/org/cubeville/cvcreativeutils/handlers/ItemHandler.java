@@ -1,5 +1,7 @@
 package org.cubeville.cvcreativeutils.handlers;
 
+import net.kyori.adventure.text.Component;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.minecraft.nbt.NBTTagCompound;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -14,10 +16,7 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BundleMeta;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.inventory.meta.SpawnEggMeta;
+import org.bukkit.inventory.meta.*;
 import org.bukkit.potion.PotionEffect;
 
 import java.io.IOException;
@@ -108,6 +107,10 @@ public class ItemHandler implements Listener {
                 for(ItemStack stack : ((BundleMeta)itemStack.getItemMeta()).getItems()) {
                     if(isItemBanned(stack)) return true;
                 }
+            }
+        } else if(hasItemMeta && itemStack.getItemMeta() instanceof BookMeta) {
+            for(Component component : ((BookMeta)itemStack.getItemMeta()).pages()) {
+                if(component.clickEvent() != null) return true;
             }
         }
         return false;
