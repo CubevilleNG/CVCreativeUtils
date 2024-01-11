@@ -5,14 +5,23 @@ import net.minecraft.nbt.NBTTagCompound;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.block.Block;
+import org.bukkit.block.ChiseledBookshelf;
+import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
 import org.bukkit.craftbukkit.v1_20_R2.inventory.CraftItemStack;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.*;
@@ -38,6 +47,44 @@ public class ItemHandler implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInventoryMove(InventoryMoveItemEvent event) {
+        checkEntireInventory(event.getSource());
+        checkEntireInventory(event.getDestination());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onContainerPlace(BlockPlaceEvent event) {
+        if(event.isCancelled()) return;
+        if(event.getBlockPlaced().getState() instanceof Container) {
+            checkEntireInventory(((Container)event.getBlockPlaced().getState()).getInventory());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onBookshelfTake(PlayerInteractEvent event) {
+        if(event.isCancelled()) return;
+        if(event.getAction().isRightClick()) {
+            Block block = event.getClickedBlock();
+            if(block != null && block.getState() instanceof ChiseledBookshelf) {
+                ChiseledBookshelf bookshelf = (ChiseledBookshelf) block.getState();
+                checkEntireInventory(bookshelf.getInventory());
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onItemDrop(EntitySpawnEvent event) {
+        if(event.isCancelled()) return;
+        if(event.getEntityType().equals(EntityType.DROPPED_ITEM)) {
+            Item item = ((Item) event.getEntity());
+            ItemStack itemStack = item.getItemStack();
+            if(isItemBanned(itemStack)) {
+                item.setItemStack(createNewStack(itemStack));
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onItemPickup(PlayerAttemptPickupItemEvent event) {
         if(event.isCancelled()) return;
         checkEntireInventory(event.getPlayer().getInventory());
@@ -60,7 +107,7 @@ public class ItemHandler implements Listener {
     }
 
     private boolean isItemBanned(ItemStack itemStack) {
-        return getByteCount(itemStack) > 100000 || isItemNBTBanned(itemStack);
+        return getByteCount(itemStack) > 100000 || failedDetailedCheck(itemStack);
     }
 
     private int getByteCount(ItemStack itemStack) {
@@ -79,7 +126,7 @@ public class ItemHandler implements Listener {
         return byteCount;
     }
 
-    private boolean isItemNBTBanned(ItemStack itemStack) {
+    private boolean failedDetailedCheck(ItemStack itemStack) {
         boolean hasItemMeta = itemStack.hasItemMeta();
         if(hasItemMeta && itemStack.getItemMeta().hasAttributeModifiers()) {
             for(Attribute attribute : itemStack.getItemMeta().getAttributeModifiers().keySet()) {
