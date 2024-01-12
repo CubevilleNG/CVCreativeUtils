@@ -10,6 +10,7 @@ import org.bukkit.block.ChiseledBookshelf;
 import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
 import org.bukkit.craftbukkit.v1_20_R2.inventory.CraftItemStack;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.event.EventHandler;
@@ -21,7 +22,10 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.*;
@@ -73,21 +77,42 @@ public class ItemHandler implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onItemDrop(EntitySpawnEvent event) {
+    public void onEntitySpawn(EntitySpawnEvent event) {
         if(event.isCancelled()) return;
-        if(event.getEntityType().equals(EntityType.DROPPED_ITEM)) {
+        EntityType type = event.getEntityType();
+        if(type.equals(EntityType.DROPPED_ITEM)) { //check dropped items
             Item item = ((Item) event.getEntity());
             ItemStack itemStack = item.getItemStack();
             if(isItemBanned(itemStack)) {
                 item.setItemStack(createNewStack(itemStack));
             }
+        } else if(type.equals(EntityType.ARMOR_STAND)) { //check armor stand equipment contents
+            checkEntireArmorStand((ArmorStand) event.getEntity());
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerInteractAtArmorStand(PlayerInteractAtEntityEvent event) {
+        if(event.isCancelled()) return;
+        if(!event.getRightClicked().getType().equals(EntityType.ARMOR_STAND)) return;
+        checkEntireArmorStand((ArmorStand) event.getRightClicked());
+        checkEntireInventory(event.getPlayer().getInventory());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onItemPickup(PlayerAttemptPickupItemEvent event) {
         if(event.isCancelled()) return;
         checkEntireInventory(event.getPlayer().getInventory());
+    }
+
+    private void checkEntireArmorStand(ArmorStand armorStand) {
+        EntityEquipment equipment = armorStand.getEquipment();
+        if(isItemBanned(equipment.getHelmet())) armorStand.setItem(EquipmentSlot.HEAD, createNewStack(equipment.getHelmet()));
+        if(isItemBanned(equipment.getChestplate())) armorStand.setItem(EquipmentSlot.CHEST, createNewStack(equipment.getChestplate()));
+        if(isItemBanned(equipment.getLeggings())) armorStand.setItem(EquipmentSlot.LEGS, createNewStack(equipment.getLeggings()));
+        if(isItemBanned(equipment.getBoots())) armorStand.setItem(EquipmentSlot.FEET, createNewStack(equipment.getBoots()));
+        if(isItemBanned(equipment.getItemInMainHand())) armorStand.setItem(EquipmentSlot.HAND, createNewStack(equipment.getItemInMainHand()));
+        if(isItemBanned(equipment.getItemInOffHand())) armorStand.setItem(EquipmentSlot.OFF_HAND, createNewStack(equipment.getItemInOffHand()));
     }
 
     private ItemStack createNewStack(ItemStack itemStack) {
@@ -128,7 +153,7 @@ public class ItemHandler implements Listener {
 
     private boolean failedDetailedCheck(ItemStack itemStack) {
         boolean hasItemMeta = itemStack.hasItemMeta();
-        if(hasItemMeta && itemStack.getItemMeta().hasAttributeModifiers()) {
+        if(hasItemMeta && itemStack.getItemMeta().hasAttributeModifiers()) { //checks if any attributes have values higher than 10
             for(Attribute attribute : itemStack.getItemMeta().getAttributeModifiers().keySet()) {
                 List<AttributeModifier> list = new ArrayList<>(itemStack.getItemMeta().getAttributeModifiers().get(attribute));
                 for(AttributeModifier modifier : list) {
@@ -138,25 +163,27 @@ public class ItemHandler implements Listener {
                 }
             }
         }
-        if(itemStack instanceof Sign || (hasItemMeta && itemStack.getItemMeta() instanceof SpawnEggMeta)) {
+        if(itemStack instanceof Sign) { //check any sign nbt. could possibly treat this like books(see below) in future but for now wiping them all.
             return true;
-        } else if(hasItemMeta && itemStack.getItemMeta() instanceof PotionMeta) {
-            for(PotionEffect effect : ((PotionMeta)itemStack.getItemMeta()).getCustomEffects()) {
-                if(effect.getAmplifier() > 10) {
-                    return true;
+        } else if(hasItemMeta) {
+            if(itemStack.getItemMeta() instanceof PotionMeta) { //check if amplifiers have value higher than 10
+                for(PotionEffect effect : ((PotionMeta)itemStack.getItemMeta()).getCustomEffects()) {
+                    if(effect.getAmplifier() > 10) {
+                        return true;
+                    }
                 }
-            }
-        } else if(hasItemMeta && itemStack.getItemMeta() instanceof SkullMeta) {
-            return ((SkullMeta) itemStack.getItemMeta()).getNoteBlockSound() != null;
-        } else if(hasItemMeta && itemStack.getItemMeta() instanceof BundleMeta) {
-            if(((BundleMeta)itemStack.getItemMeta()).hasItems()) {
-                for(ItemStack stack : ((BundleMeta)itemStack.getItemMeta()).getItems()) {
-                    if(isItemBanned(stack)) return true;
+            } else if(itemStack.getItemMeta() instanceof SkullMeta) { //check if skull has noteblocksound associated with it
+                return ((SkullMeta) itemStack.getItemMeta()).getNoteBlockSound() != null;
+            } else if(itemStack.getItemMeta() instanceof BundleMeta) { //check each itemstack within the bundle
+                if(((BundleMeta)itemStack.getItemMeta()).hasItems()) {
+                    for(ItemStack stack : ((BundleMeta)itemStack.getItemMeta()).getItems()) {
+                        if(isItemBanned(stack)) return true;
+                    }
                 }
-            }
-        } else if(hasItemMeta && itemStack.getItemMeta() instanceof BookMeta) {
-            for(Component component : ((BookMeta)itemStack.getItemMeta()).pages()) {
-                if(component.clickEvent() != null) return true;
+            } else if(itemStack.getItemMeta() instanceof BookMeta) { //check if any pages of the book have components with click events
+                for(Component component : ((BookMeta)itemStack.getItemMeta()).pages()) {
+                    if(component.clickEvent() != null) return true;
+                }
             }
         }
         return false;
