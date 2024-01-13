@@ -124,13 +124,13 @@ public class EntityHandler implements Listener {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             Map<Entity, Location> copyEveryLivingEntity = new HashMap<>(everyLivingEntity);
             for(Entity entity : copyEveryLivingEntity.keySet()) {
-                if(entityOutsideOfRegion(entity)) {
-                    if(!beingLaunched(entity.getUniqueId())) {
+                if(!beingLaunched(entity.getUniqueId())) {
+                    if(entityOutsideOfRegion(entity)) {
                         teleportEntityBack(entity);
                         beingLaunched.add(entity.getUniqueId());
+                    } else {
+                        everyLivingEntity.put(entity, entity.getLocation());
                     }
-                } else {
-                    everyLivingEntity.put(entity, entity.getLocation());
                 }
             }
         }, 20, 40);
@@ -229,10 +229,8 @@ public class EntityHandler implements Listener {
         List<ProtectedRegion> toRegions = this.plotManager.getRegionsAtLoc(toLoc);
         if(!fromRegions.equals(toRegions)) {
             event.setCancelled(true);
-            if(!beingLaunched(event.getEntity().getUniqueId())) {
-                beingLaunched.add(event.getEntity().getUniqueId());
-                launchEntityBack(fromLoc, toLoc, event.getEntity(), fromRegions);
-            }
+            beingLaunched.add(event.getEntity().getUniqueId());
+            launchEntityBack(fromLoc, toLoc, event.getEntity(), fromRegions);
         }
     }
 
@@ -248,14 +246,12 @@ public class EntityHandler implements Listener {
         List<ProtectedRegion> toRegions = this.plotManager.getRegionsAtLoc(toLoc);
         if(!fromRegions.equals(toRegions)) {
             UUID uuid = event.getVehicle().getUniqueId();
-            if(beingLaunched(uuid)) {
-                beingLaunched.add(uuid);
-                if(!vehicleRegions.containsKey(uuid)) {
-                    vehicleRegions.put(uuid, fromRegions);
-                    checkVehicleRegion(event.getVehicle().getUniqueId());
-                }
-                launchEntityBack(fromLoc, toLoc, event.getVehicle(), fromRegions);
+            beingLaunched.add(uuid);
+            if(!vehicleRegions.containsKey(uuid)) {
+                vehicleRegions.put(uuid, fromRegions);
+                checkVehicleRegion(event.getVehicle().getUniqueId());
             }
+            launchEntityBack(fromLoc, toLoc, event.getVehicle(), fromRegions);
         }
     }
 
@@ -371,18 +367,18 @@ public class EntityHandler implements Listener {
         entity.setVelocity(blastVector);
         entity.getWorld().playEffect(entity.getLocation(), Effect.GHAST_SHOOT, 0, 15);
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            beingLaunched.remove(entity.getUniqueId());
-            if(this.plotManager.getRegionsAtLoc(entity.getLocation()).contains(this.plotManager.getRegionForEntity(entity.getUniqueId(), entity.getWorld()))) {
+            if(!this.plotManager.getRegionsAtLoc(entity.getLocation()).contains(this.plotManager.getRegionForEntity(entity.getUniqueId(), entity.getWorld()))) {
             //if(!fromRegions.equals(this.plotManager.getRegionsAtLoc(entity.getLocation()))) {
                 if(!entity.getPassengers().isEmpty()) entity.eject();
                 entity.teleport(fromLoc);
                 entity.setVelocity(new Vector());
             }
+            beingLaunched.remove(entity.getUniqueId());
             entity.setInvulnerable(false);
         }, 20);
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBannedEntitySpawn(EntitySpawnEvent event) {
         if(event.isCancelled()) return;
         if(event.getLocation().getWorld() != null && plotManager.isWorldControlled(event.getLocation().getWorld()) && isEntityBanned(event.getEntityType())) {
