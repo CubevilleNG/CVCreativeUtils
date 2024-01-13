@@ -50,18 +50,21 @@ public class PlotManager {
         Map<ProtectedRegion, LinkedHashSet<UUID>> innerPlots;
         Map<ProtectedRegion, Long> innerRegionRealizedTime;
         LinkedHashSet<UUID> entities;
+        Long time;
         if(this.plots.containsKey(world)) {
             innerPlots = this.plots.get(world);
             if(innerPlots.containsKey(region)) {
                 entities = innerPlots.get(region);
-                innerRegionRealizedTime = this.regionRealizedTime.get(world);
             } else {
                 entities = new LinkedHashSet<>();
-                innerRegionRealizedTime = new HashMap<>();
             }
         } else {
             innerPlots = new HashMap<>();
             entities = new LinkedHashSet<>();
+        }
+        if(this.regionRealizedTime.containsKey(world)) {
+            innerRegionRealizedTime = this.regionRealizedTime.get(world);
+        } else {
             innerRegionRealizedTime = new HashMap<>();
         }
         entities.add(uuid);
