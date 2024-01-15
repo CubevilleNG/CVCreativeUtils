@@ -10,6 +10,7 @@ import org.bukkit.block.ChiseledBookshelf;
 import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
 import org.bukkit.craftbukkit.v1_20_R2.inventory.CraftItemStack;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
@@ -183,6 +184,10 @@ public class ItemHandler implements Listener {
             } else if(itemStack.getItemMeta() instanceof BookMeta) { //check if any pages of the book have components with click events
                 for(Component component : ((BookMeta)itemStack.getItemMeta()).pages()) {
                     if(component.clickEvent() != null) return true;
+                }
+            } else if(!itemStack.getEnchantments().isEmpty()) { //check if enchantments have value higher than 10
+                for(Enchantment enchantment : itemStack.getEnchantments().keySet()) {
+                    if(itemStack.getEnchantments().get(enchantment) > 10) return true;
                 }
             }
         }
