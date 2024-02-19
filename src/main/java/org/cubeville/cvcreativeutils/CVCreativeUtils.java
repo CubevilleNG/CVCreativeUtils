@@ -47,7 +47,7 @@ public class CVCreativeUtils extends JavaPlugin {
         EntityHandler entityHandler = new EntityHandler(this, plotManager, bannedEntities);
         Bukkit.getPluginManager().registerEvents(entityHandler, this);
         Bukkit.getPluginManager().registerEvents(new BlockHandler(plotManager), this);
-        Bukkit.getPluginManager().registerEvents(new ItemHandler(), this);
+        Bukkit.getPluginManager().registerEvents(new ItemHandler(this), this);
         this.reloadParser = new CommandParser();
         this.reloadParser.addCommand(new ReloadCommand(this, plotManager, entityHandler));
         this.mobcountParser = new CommandParser();

@@ -2,6 +2,7 @@ package org.cubeville.cvcreativeutils.handlers;
 
 import net.kyori.adventure.text.Component;
 import net.minecraft.nbt.NBTTagCompound;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -11,9 +12,7 @@ import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
 import org.bukkit.craftbukkit.v1_20_R2.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -25,18 +24,22 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.EntityEquipment;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
 import org.bukkit.potion.PotionEffect;
+import org.cubeville.cvcreativeutils.CVCreativeUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ItemHandler implements Listener {
+
+    CVCreativeUtils plugin;
+
+    public ItemHandler(CVCreativeUtils plugin) {
+        this.plugin = plugin;
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryCreative(InventoryClickEvent event) {
@@ -73,6 +76,7 @@ public class ItemHandler implements Listener {
             if(block != null && block.getState() instanceof ChiseledBookshelf) {
                 ChiseledBookshelf bookshelf = (ChiseledBookshelf) block.getState();
                 checkEntireInventory(bookshelf.getInventory());
+                Bukkit.getScheduler().runTaskLater(plugin, () -> checkEntireInventory(event.getPlayer().getInventory()), 1);
             }
         }
     }
@@ -80,6 +84,7 @@ public class ItemHandler implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntitySpawn(EntitySpawnEvent event) {
         if(event.isCancelled()) return;
+        if(event.getEntity() instanceof Player) return;
         EntityType type = event.getEntityType();
         if(type.equals(EntityType.DROPPED_ITEM)) { //check dropped items
             Item item = ((Item) event.getEntity());
@@ -87,17 +92,34 @@ public class ItemHandler implements Listener {
             if(isItemBanned(itemStack)) {
                 item.setItemStack(createNewStack(itemStack));
             }
-        } else if(type.equals(EntityType.ARMOR_STAND)) { //check armor stand equipment contents
-            checkEntireArmorStand((ArmorStand) event.getEntity());
+        } else if(event.getEntity() instanceof LivingEntity) { //check living entity equipment contents
+            checkEntireLivingEntityEquipment((LivingEntity) event.getEntity());
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerInteractAtArmorStand(PlayerInteractAtEntityEvent event) {
+    public void onPlayerInteractAtLivingEntity(PlayerInteractAtEntityEvent event) {
         if(event.isCancelled()) return;
-        if(!event.getRightClicked().getType().equals(EntityType.ARMOR_STAND)) return;
-        checkEntireArmorStand((ArmorStand) event.getRightClicked());
+        Entity entity = event.getRightClicked();
+        if(entity instanceof Player) return;
+        if(!(entity instanceof LivingEntity)) return;
+        checkEntireLivingEntityEquipment((LivingEntity) entity);
         checkEntireInventory(event.getPlayer().getInventory());
+        if(entity instanceof Villager) {
+            Villager villager = (Villager) entity;
+            List<MerchantRecipe> recipes = villager.getRecipes();
+            int i = 0;
+            for(MerchantRecipe recipe : recipes) {
+                if(isItemBanned(recipe.getResult())) {
+                    MerchantRecipe newRecipe = new MerchantRecipe(createNewStack(recipe.getResult()),
+                            recipe.getUses(), recipe.getMaxUses(), recipe.hasExperienceReward(), recipe.getVillagerExperience(),
+                            recipe.getPriceMultiplier(), recipe.getDemand(), recipe.getSpecialPrice(), recipe.shouldIgnoreDiscounts());
+                    for(ItemStack ingredient : recipe.getIngredients()) newRecipe.addIngredient(ingredient);
+                    villager.setRecipe(i, newRecipe);
+                }
+                i++;
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -106,15 +128,25 @@ public class ItemHandler implements Listener {
         checkEntireInventory(event.getPlayer().getInventory());
     }
 
-    private void checkEntireArmorStand(ArmorStand armorStand) {
-        EntityEquipment equipment = armorStand.getEquipment();
-        if(isItemBanned(equipment.getHelmet())) armorStand.setItem(EquipmentSlot.HEAD, createNewStack(equipment.getHelmet()));
-        if(isItemBanned(equipment.getChestplate())) armorStand.setItem(EquipmentSlot.CHEST, createNewStack(equipment.getChestplate()));
-        if(isItemBanned(equipment.getLeggings())) armorStand.setItem(EquipmentSlot.LEGS, createNewStack(equipment.getLeggings()));
-        if(isItemBanned(equipment.getBoots())) armorStand.setItem(EquipmentSlot.FEET, createNewStack(equipment.getBoots()));
-        if(isItemBanned(equipment.getItemInMainHand())) armorStand.setItem(EquipmentSlot.HAND, createNewStack(equipment.getItemInMainHand()));
-        if(isItemBanned(equipment.getItemInOffHand())) armorStand.setItem(EquipmentSlot.OFF_HAND, createNewStack(equipment.getItemInOffHand()));
+    private void checkEntireLivingEntityEquipment(LivingEntity livingEntity) {
+        EntityEquipment equipment = livingEntity.getEquipment();
+        if(equipment == null) return;
+        if(isItemBanned(equipment.getHelmet())) equipment.setItem(EquipmentSlot.HEAD, createNewStack(equipment.getHelmet()));
+        if(isItemBanned(equipment.getChestplate())) equipment.setItem(EquipmentSlot.CHEST, createNewStack(equipment.getChestplate()));
+        if(isItemBanned(equipment.getLeggings())) equipment.setItem(EquipmentSlot.LEGS, createNewStack(equipment.getLeggings()));
+        if(isItemBanned(equipment.getBoots())) equipment.setItem(EquipmentSlot.FEET, createNewStack(equipment.getBoots()));
+        if(isItemBanned(equipment.getItemInMainHand())) equipment.setItem(EquipmentSlot.HAND, createNewStack(equipment.getItemInMainHand()));
+        if(isItemBanned(equipment.getItemInOffHand())) equipment.setItem(EquipmentSlot.OFF_HAND, createNewStack(equipment.getItemInOffHand()));
     }
+
+    /*private void checkInventoryHolderEntity(InventoryHolder entity) {
+        Inventory inv = entity.getInventory();
+        int i = 0;
+        for(ItemStack item : inv) {
+            if(item != null && isItemBanned(item)) entity.getInventory().setItem(i, createNewStack(item));
+            i++;
+        }
+    }*/
 
     private ItemStack createNewStack(ItemStack itemStack) {
         return new ItemStack(itemStack.getType(), itemStack.getAmount());
@@ -166,6 +198,8 @@ public class ItemHandler implements Listener {
         }
         if(itemStack instanceof Sign) { //check any sign nbt. could possibly treat this like books(see below) in future but for now wiping them all.
             return true;
+        } else if(hasItemMeta && itemStack.getItemMeta() instanceof SpawnEggMeta) {
+            if(((SpawnEggMeta) itemStack.getItemMeta()).getCustomSpawnedType() != null) return true;
         } else if(hasItemMeta) {
             if(itemStack.getItemMeta() instanceof PotionMeta) { //check if amplifiers have value higher than 10
                 for(PotionEffect effect : ((PotionMeta)itemStack.getItemMeta()).getCustomEffects()) {
