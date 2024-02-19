@@ -218,6 +218,9 @@ public class ItemHandler implements Listener {
             } else if(itemStack.getItemMeta() instanceof BookMeta) { //check if any pages of the book have components with click events
                 for(Component component : ((BookMeta)itemStack.getItemMeta()).pages()) {
                     if(component.clickEvent() != null) return true;
+                    for(Component child : component.children()) {
+                        if(child.clickEvent() != null) return true;
+                    }
                 }
             } else if(!itemStack.getEnchantments().isEmpty()) { //check if enchantments have value higher than 10
                 for(Enchantment enchantment : itemStack.getEnchantments().keySet()) {

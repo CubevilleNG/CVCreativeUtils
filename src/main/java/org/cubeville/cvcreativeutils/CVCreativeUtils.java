@@ -32,6 +32,7 @@ public class CVCreativeUtils extends JavaPlugin {
     private CommandParser mobcountParser;
     private CommandParser mobtpParser;
     private CommandParser mobkillParser;
+    private CommandParser itemDetailsParser;
 
     private int entitiesPerPlot;
     private List<World> controlledWorlds;
@@ -56,6 +57,8 @@ public class CVCreativeUtils extends JavaPlugin {
         this.mobtpParser.addCommand(new MobTpCommand(plotManager));
         this.mobkillParser = new CommandParser();
         this.mobkillParser.addCommand(new MobKillCommand(plotManager));
+        this.itemDetailsParser = new CommandParser();
+        this.itemDetailsParser.addCommand(new ItemDetailsCommand(logger));
     }
 
     @Override
@@ -68,6 +71,8 @@ public class CVCreativeUtils extends JavaPlugin {
             mobtpParser.execute(sender, args);
         } else if(command.getName().equalsIgnoreCase("mobkill")) {
             mobkillParser.execute(sender, args);
+        } else if(command.getName().equalsIgnoreCase("itemdetails")) {
+            itemDetailsParser.execute(sender, args);
         }
         return false;
     }

@@ -22,6 +22,9 @@ commands:
   mobkill:
     description: kill mob
     permission: cvcreativeutils.mobkill
+  itemdetails:
+    description: print itemstack details
+    permission: cvcreativeutils.itemdetails
 
 permissions:
   cvcreativeutils.reload:
@@ -38,4 +41,8 @@ permissions:
 
   cvcreativeutils.mobkill:
     description: access to mobkill command
+    default: op
+
+  cvcreativeutils.itemdetails:
+    description: access to itemdetails command
     default: op
