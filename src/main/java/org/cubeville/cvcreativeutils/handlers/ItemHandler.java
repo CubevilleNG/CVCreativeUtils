@@ -10,7 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.ChiseledBookshelf;
 import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
-import org.bukkit.craftbukkit.v1_20_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
